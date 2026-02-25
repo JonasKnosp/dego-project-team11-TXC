@@ -4,6 +4,7 @@ DEGO Course Project - Team 11 - TXC
 # # Team M e m b e r s
 - Jonas Knosp
 - Inês Monteiro
+- Estêvão Fernandes
 ## Project D e s c r i p t i o n
 Credit scoring bias analysis for DEGO course .
 ## St ru c tu re
