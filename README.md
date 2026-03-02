@@ -204,8 +204,8 @@ Full implementation: `notebooks/03-privacy-demo.ipynb`
 |-------|---------|-------------------|
 | `full_name` | Direct identifier | Personal data (Art. 4(1)) |
 | `email` | Direct identifier | Personal data (Art. 4(1)) |
-| `ssn` | Government-issued identifier | Personal data — high sensitivity |
-| `ip_address` | Pseudonymous identifier | Personal data when linkable (Recital 30) |
+| `ssn` | Direct identifier (Government-issued identifier) | Personal data — high sensitivity |
+| `ip_address` | Direct identifier | Personal data when linkable (Recital 30) |
 | `date_of_birth` | Quasi-identifier | Personal data (Art. 4(1)) |
 | `zip_code` | Quasi-identifier | Personal data when combined |
 | `gender` | Quasi-identifier / potential special category | Personal data; may become special category in combination (Art. 9) |
