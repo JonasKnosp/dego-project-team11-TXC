@@ -329,7 +329,7 @@ Commits follow a tag-prefix convention for traceability:
 |--------|----------------------|
 | Inês Monteiro | Data loading, JSON flattening, cleaning pipeline, `01-data-quality.ipynb` |
 | Anh Nguyen | DI ratio, DPD computation, proxy analysis, `02-bias-analysis.ipynb`, `fairness_utils.py` |
-| Estêvão Fernandes | PII inventory, GDPR mapping, `03-privacy-demo.ipynb` |
+| Estêvão Fernandes | PII inventory, Pseudonymization ,GDPR mapping, `03-privacy-demo.ipynb` |
 | Jonas Knosp | README, project coordination, presentation narrative, PR reviews |
 
 > All team members have committed under their own GitHub accounts. Commit history reflects steady progress across multiple working sessions.
