@@ -204,8 +204,8 @@ Full implementation: `notebooks/03-privacy-demo.ipynb`
 |-------|---------|-------------------|
 | `full_name` | Direct identifier | Personal data (Art. 4(1)) |
 | `email` | Direct identifier | Personal data (Art. 4(1)) |
-| `ssn` | Government-issued identifier | Personal data — high sensitivity |
-| `ip_address` | Pseudonymous identifier | Personal data when linkable (Recital 30) |
+| `ssn` | Direct identifier (Government-issued identifier) | Personal data — high sensitivity |
+| `ip_address` | Direct identifier | Personal data when linkable (Recital 30) |
 | `date_of_birth` | Quasi-identifier | Personal data (Art. 4(1)) |
 | `zip_code` | Quasi-identifier | Personal data when combined |
 | `gender` | Quasi-identifier / potential special category | Personal data; may become special category in combination (Art. 9) |
@@ -329,7 +329,7 @@ Commits follow a tag-prefix convention for traceability:
 |--------|----------------------|
 | Inês Monteiro | Data loading, JSON flattening, cleaning pipeline, `01-data-quality.ipynb` |
 | Anh Nguyen | DI ratio, DPD computation, proxy analysis, `02-bias-analysis.ipynb`, `fairness_utils.py` |
-| Estêvão Fernandes | PII inventory, GDPR mapping, `03-privacy-demo.ipynb` |
+| Estêvão Fernandes | PII inventory, Pseudonymization ,GDPR mapping, `03-privacy-demo.ipynb` |
 | Jonas Knosp | README, project coordination, presentation narrative, PR reviews |
 
 > All team members have committed under their own GitHub accounts. Commit history reflects steady progress across multiple working sessions.
