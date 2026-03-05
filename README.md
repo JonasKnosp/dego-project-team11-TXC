@@ -349,7 +349,6 @@ The dashboard should track key fairness metrics such as:
 - Demographic Parity Difference (DPD)  
 - Approval disparities across demographic segments  
 - Changes in fairness metrics over time  
-
 Regular monitoring would allow the organization to detect emerging bias and ensure compliance with responsible AI and regulatory requirements.
 ---
 
