@@ -247,8 +247,8 @@ Full implementation: `notebooks/03-privacy-demo.ipynb`
 |-------|---------|-------------------|------------|
 | `full_name` | Direct identifier | Art. 4(1) | ✅ Yes |
 | `email` | Direct identifier | Art. 4(1) | ✅ Yes |
-| `ssn` | Government identifier | High sensitivity | ✅ Yes |
-| `ip_address` | Online identifier | Recital 30 | ✅ Yes |
+| `ssn` | Direct identifier | High sensitivity | ✅ Yes |
+| `ip_address` | Direct identifier | Recital 30 | ✅ Yes |
 | `date_of_birth` | Quasi-identifier | Art. 4(1) | ✅ Yes |
 | `zip_code` | Quasi-identifier | Personal when combined | ✅ Yes |
 | `gender` | Quasi-identifier | Art. 4(1) / potential Art. 9 | ✅ Yes |
