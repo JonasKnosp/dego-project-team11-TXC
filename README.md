@@ -339,6 +339,18 @@ NovaCred's lending model is **explicitly High-Risk** under EU AI Act Annex III, 
 **Action:** Conduct a DPIA under GDPR Art. 35 before further deployment or retraining.  
 **Addresses:** GDPR Art. 35; EU AI Act Art. 9, Art. 43
 
+### 4.1.Bias Monitoring Dashboard
+To ensure ongoing fairness in the credit approval system, NovaCred should implement a bias monitoring dashboard.
+
+The dashboard should track key fairness metrics such as:
+
+- Approval rates by gender and age group  
+- Disparate Impact Ratio (DI) across protected groups  
+- Demographic Parity Difference (DPD)  
+- Approval disparities across demographic segments  
+- Changes in fairness metrics over time  
+
+Regular monitoring would allow the organization to detect emerging bias and ensure compliance with responsible AI and regulatory requirements.
 ---
 
 ## 5. How to Reproduce
