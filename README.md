@@ -168,72 +168,109 @@ The `date_of_birth` field is stored as a plain string with **no enforced format*
 
 ---
 
-## 2. Bias Detection & Fairness Analysis
+## Bias Detection & Fairness Analysis
 
-Full methodology and statistical tests: `notebooks/02-bias-analysis.ipynb`
+Full methodology and statistical analysis are available in: `notebooks/02-bias-analysis.ipynb`
 
-### 2.1 Approval Rates by Gender
+This analysis evaluates whether NovaCred’s historical loan approval decisions show evidence of demographic bias.  
+We investigate disparities across **gender**, **age groups**, and **intersectional combinations of both attributes**, and examine whether some features may act as **proxy variables** for protected characteristics.
+
+## 1. Gender Bias
+
+Approval rates differ substantially between male and female applicants.
 
 | Gender | n | Approved | Approval Rate |
-|--------|---|----------|---------------|
+|------|---|---|---|
 | Male | 248 | 163 | 65.7% |
 | Female | 251 | 127 | 50.6% |
 | Unknown/Missing | 3 | 2 | 66.7% |
 
-![Figure 5: Approval rate by gender](figures/fig5_approval_by_gender.png)  
-*Figure 5: Female applicants are approved at 50.6% versus 65.7% for males — a 15.1 percentage point gap.*
+Female applicants are approved **15.1 percentage points less often** than male applicants.
 
-### 2.2 Disparate Impact Ratio
-```
+## 2. Disparate Impact
+
+Disparate Impact (DI) measures whether approval rates differ across groups.
+
+DI is calculated as:
+
 DI = P(approved | Female) / P(approved | Male)
-   = 0.506 / 0.657
-   = 0.770
-```
 
-> 🔴 **DI = 0.770 < 0.80** — The four-fifths threshold is violated, indicating potential **unlawful disparate impact** on female applicants.
+DI = 0.506 / 0.657  
+DI = **0.770**
 
-**Demographic Parity Difference (DPD)** computed via `fairlearn`:
-```
-DPD = P(approved | Female) − P(approved | Male) = −0.151
-```
+According to the **four-fifths rule**, values below **0.80** may indicate potential disparate impact.
 
-Female applicants are **15.1 percentage points less likely** to be approved.
+Result: **DI = 0.770**, suggesting possible adverse impact on female applicants.
 
-### 2.3 Age-Based & Intersectional Bias
+Demographic Parity Difference (DPD):
 
-| Age Group | Male Approval Rate | Female Approval Rate | Female DI |
-|-----------|-------------------|---------------------|-----------|
-| 18–25 | 61.4% | 55.9% | 0.91 |
-| 26–35 | 51.2% | 34.5% | **0.67** 🔴 |
-| 36–45 | 67.3% | 54.1% | 0.80 |
-| 46–55 | 71.8% | 57.3% | 0.80 |
-| 56–65 | 77.8% | 52.4% | **0.67** 🔴 |
+DPD = P(approved | Female) − P(approved | Male)
 
-The 26–35 and 56–65 groups show **intersectional bias** — DI of 0.67 indicates compounding disadvantage beyond what gender alone explains.
+DPD = **−0.151**
 
-### 2.4 Rejection Reason Distribution
+Female applicants are therefore **15.1 percentage points less likely to be approved**.
 
-| Rejection Reason | Count (n) | % of Total Rejections |
-|----------------|----------|----------------------|
-| `algorithm_risk_score` | 170 | 81.7% |
-| `insufficient_credit_history` | 23 | 11.1% |
-| `high_dti_ratio` | 13 | 6.3% |
-| `low_income` | 4 | 1.9% |
+## 3. Age-Based Bias
 
-![Figure 4: Rejection reason distribution](figures/fig4_rejection_reasons.png)  
-*Figure 4: 81.7% of rejections carry only `algorithm_risk_score` — a black-box label providing no actionable information to the applicant or auditor.*
+Approval rates also vary across age groups.
 
-### 2.5 Proxy Discrimination Analysis
+| Age Group | Approval Rate |
+|---|---|
+| 18–25 | 57.1% |
+| 26–35 | 40.4% |
+| 36–45 | 64.7% |
+| 46–55 | 66.7% |
+| 56–65 | 65.8% |
 
-| Attribute | Proxy For | Finding |
-|-----------|-----------|---------|
-| `zip_code` | Gender | Point-biserial correlation **−0.82** with binary gender. ZIP `902xx` → overwhelmingly female; `100xx` → overwhelmingly male. |
-| `credit_history_months` | Age | Younger applicants have shorter histories — creates structural age-correlated disadvantage. |
-| `annual_income` | Gender | Income gender gaps make income-filtering a partial gender proxy. |
-| `spending_behavior` categories | Health/lifestyle/religion | `Healthcare`, `Alcohol`, `Gambling` can reveal information qualifying as special category data under GDPR Art. 9. |
+Applicants aged **26–35** have the lowest approval rate, while older applicants show higher approval rates.
 
-![Figure 6: Correlation heatmap](figures/fig6_correlation_heatmap.png)  
-*Figure 6: `zip_code` (binary-encoded) shows the strongest correlation with both `gender_binary` and `loan_approved`, confirming its proxy discrimination risk.*
+This suggests potential **age-related structural disparities**.
+
+## 4. Intersectional Bias (Age × Gender)
+
+Combining demographic attributes reveals stronger disparities.
+
+Example findings:
+
+- Women aged **26–35** have an approval rate of approximately **33%**
+- Men aged **56–65** have an approval rate close to **78%**
+
+This indicates **intersectional bias**, where multiple attributes interact to amplify disparities.
+
+## 5. Rejection Reason Distribution
+
+| Rejection Reason | Count | Share |
+|---|---|---|
+| algorithm_risk_score | 170 | 81.7% |
+| insufficient_credit_history | 23 | 11.1% |
+| high_dti_ratio | 13 | 6.3% |
+| low_income | 4 | 1.9% |
+
+Most rejections are attributed to **algorithm_risk_score**, which functions as a high-level decision label rather than a transparent explanation.
+
+## 6. Proxy Discrimination Risk
+
+Some variables may act as **indirect proxies for protected attributes**, reproducing bias even when those attributes are excluded.
+
+| Attribute | Potential Proxy For | Observation |
+|---|---|---|
+| zip_code | Gender | Geographic patterns correlate with approval outcomes |
+| credit_history_months | Age | Younger applicants naturally have shorter credit histories |
+| annual_income | Gender | Income disparities may indirectly reproduce gender gaps |
+| spending_behavior_categories | Sensitive traits | May reveal lifestyle or health-related patterns |
+
+These variables may allow demographic disparities to persist **even if gender or age are removed from the model**.
+
+## Key Finding
+
+The fairness analysis reveals:
+
+- A **significant approval gap between male and female applicants**
+- **Lower approval rates for applicants aged 26–35**
+- **Intersectional disparities** affecting specific age–gender combinations
+- Evidence that **proxy variables may reproduce demographic bias**
+
+Together, these findings highlight the importance of **fairness monitoring, transparency, and governance** in automated credit decision systems.
 
 ---
 
