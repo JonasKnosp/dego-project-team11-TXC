@@ -40,10 +40,6 @@ dego-project-team11-TXC/
 ├── data/
 │   ├── raw_credit_applications.json
 │   └── cleaned_credit_applications.csv
-├── notebooks/
-│   ├── 01-data-quality.ipynb
-│   ├── 02-bias-analysis.ipynb
-│   └── 03-privacy-demo.ipynb
 ├── figures/
 │   ├── fig_1_histograms_for_num_cols.png
 │   ├── fig_2_categorical_feature_distributions.png
@@ -54,11 +50,16 @@ dego-project-team11-TXC/
 │   ├── fig_7_Approval_Rate_by_Age_and_Gender.png
 │   ├── fig_8_ZIP_Codes_with_Lowest_Approval_Rates.png
 │   └── fig_9_correlation_heatmap.png
+├── notebooks/
+│   ├── 01-data-quality.ipynb
+│   ├── 02-bias-analysis.ipynb
+│   └── 03-privacy-demo.ipynb
+├── presentation/
+│   ├── Dego Project_Team11_TXC_Video presentation.pdf
+│   └── Video Presentation YouTube Link.rtf
 ├── src/
 │   └── fairness_utils.py
-└── presentation/
-    └── Dego Project_Team11_TXC_Video presentation.pdf
-    └── Video Presentation YouTube Link.rtf
+└── .gitignore
 ```
 
 ---
