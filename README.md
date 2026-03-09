@@ -121,7 +121,7 @@ All issues identified below are documented and quantified in `notebooks/01-data-
 `loan_purpose` (~89.6% missing) and `processing_timestamp` (87.6% missing) are effectively absent and cannot be used analytically. Notably, `loan_purpose` is the most sparsely populated field in the dataset. The near-total absence of `processing_timestamp` means NovaCred cannot demonstrate GDPR storage limitation compliance (Art. 5(1)(e)) or produce the audit trails required under the EU AI Act (Art. 12).
 
 ![Figure 1: Histograms for numerical columns](figures/fig_1_histograms_for_num_cols.png)  
-*Figure 1: Histograms for all numerical columns. Reveals distributions and outliers including zero income and negative credit history months.*
+*Figure 1: Distributions of all numerical features.*
 
 ### 1.2 Consistency
 
@@ -145,7 +145,7 @@ All issues identified below are documented and quantified in `notebooks/01-data-
 | Invalid email format (`sarah.smith@`) | 1 | Incomplete email stored in `email` field. |
 
 ![Figure 2: Categorical feature distributions](figures/fig_2_categorical_feature_distributions.png)  
-*Figure 2: Categorical feature distributions, including the six distinct gender encodings that break aggregation and bias analysis.*
+*Figure 2: Categorical feature distributions across gender, rejection reasons, and loan approval status.*
 
 ### 1.4 Accuracy
 
@@ -172,7 +172,7 @@ The `date_of_birth` field is stored as a plain string with **no enforced format*
 Any age-based calculation performed without prior normalisation will silently produce incorrect results for 31.3% of records.
 
 ![Figure 3: Numerical features vs loan approval boxplots](figures/fig_3_numerical_features_vs_loan_approval_boxplots.png)  
-*Figure 3: Boxplots of numerical features split by loan approval outcome. Invalid values (negative credit history, zero income, DTI > 1.0) are visible as outliers.*
+*Figure 3: Boxplots of numerical features by loan approval status.*
 
 ### 1.6 Data Quality Audit Summary
 
@@ -238,7 +238,7 @@ DPD = P(approved | Female) − P(approved | Male) = −0.151
 ```
 
 ![Figure 4: Loan Approval Rate by Gender](figures/fig_4_Loan_Approval_Rate_by_Gender.png)  
-*Figure 4: Approval rate by gender after normalising inconsistent encodings. The 15.1 pp gap and DI ratio of 0.770 indicate potential disparate impact.*
+*Figure 4: Approval rate by gender after normalising inconsistent encodings.*
 
 ### 2.3 Age-Based Bias
 
@@ -255,7 +255,7 @@ Approval rates also vary significantly across age groups.
 Applicants aged **26–35** have the lowest approval rate by a significant margin, suggesting potential age-related structural disparities. This group also naturally has shorter credit histories, which may compound the effect via proxy discrimination (see §2.6).
 
 ![Figure 6: Approval Rate by Age Group](figures/fig_6_Approval_Rate_by_Age_Group.png)  
-*Figure 6: Approval rate by age group. The 26–35 cohort is approved at only 40.4%, a significant outlier compared to all other groups.*
+*Figure 6: Approval rate by age group.*
 
 ### 2.4 Intersectional Bias (Age × Gender)
 
@@ -271,7 +271,7 @@ Combining demographic attributes reveals disparities far stronger than either di
 The gap between the most- and least-favoured intersectional segment is **approximately 45 percentage points**. Any fairness analysis that examines only gender or only age will miss this amplification effect.
 
 ![Figure 7: Approval Rate by Age and Gender](figures/fig_7_Approval_Rate_by_Age_and_Gender.png)  
-*Figure 7: Intersectional approval rates by age group and gender. Women aged 26–35 are approved at ≈33%, versus ≈78% for men aged 56–65 — a 45 pp gap invisible in single-dimension analysis.*
+*Figure 7: Intersectional approval rates by age group and gender.*
 
 ### 2.5 Rejection Reason Distribution
 
@@ -285,7 +285,7 @@ The gap between the most- and least-favoured intersectional segment is **approxi
 Most rejections (81.7%) are attributed to `algorithm_risk_score`, which functions as an opaque decision label with no interpretable breakdown for the affected applicant.
 
 ![Figure 5: Rejection Reasons](figures/fig_5_Rejection_Reasons.png)  
-*Figure 5: 81.7% of rejections are attributed to `algorithm_risk_score` — an opaque label that provides no actionable explanation to the applicant.*
+*Figure 5: Rejection Reasons.*
 
 ### 2.6 Proxy Discrimination Risk
 
@@ -301,10 +301,10 @@ Some variables may act as **indirect proxies for protected attributes**, reprodu
 These variables allow demographic disparities to persist **even if gender or age are explicitly removed from the model**. The `zip_code`–gender correlation of −0.806 is particularly strong and constitutes a direct proxy discrimination risk.
 
 ![Figure 8: ZIP Codes with Lowest Approval Rates](figures/fig_8_ZIP_Codes_with_Lowest_Approval_Rates.png)  
-*Figure 8: ZIP codes with the lowest loan approval rates. The geographic clustering of rejections mirrors gender distribution patterns, confirming `zip_code` as a proxy variable.*
+*Figure 8: ZIP codes with the lowest loan approval rates.*
 
 ![Figure 9: Correlation heatmap](figures/fig_9_correlation_heatmap.png)  
-*Figure 9: Correlation heatmap highlighting `zip_code`'s strong relationship with gender (−0.806), confirming its role as a proxy variable.*
+*Figure 9: Correlation heatmap*
 
 ---
 
