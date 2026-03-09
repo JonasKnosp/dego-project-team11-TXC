@@ -8,10 +8,10 @@ MSc Business Analytics | Nova SBE
 
 | Name | Role |
 |------|------|
-| Inês Monteiro | Data Engineer — data ingestion, cleaning pipeline, repository structure |
-| Anh Nguyen | Data Scientist — bias analysis, fairness metrics, statistical testing |
-| Estêvão Fernandes | Governance Officer — GDPR mapping, compliance analysis, policy recommendations |
-| Jonas Knosp | Product Lead — coordination, README, presentation narrative |
+| Inês Monteiro | Data Engineer: data ingestion, cleaning pipeline, repository structure |
+| Anh Nguyen | Data Scientist: bias analysis, fairness metrics, statistical testing |
+| Estêvão Fernandes | Governance Officer: GDPR mapping, compliance analysis, policy recommendations |
+| Jonas Knosp | Product Lead: coordination, README, presentation narrative |
 
 ---
 
@@ -24,8 +24,10 @@ Key findings are summarised below:
 - **162 records (32.3%)** have `date_of_birth` in a non-standard or missing format — 101 records use `MM/DD/YYYY`, 56 use `YYYY/MM/DD`, and 5 are empty strings — preventing reliable age computation without prior normalisation.
 - **22.1% of records (111/502)** exhibit inconsistent gender encoding, with **six distinct representations** (`Male`, `M`, `Female`, `F`, empty string, and absent field) used for what should be a controlled categorical field — a critical validity and consistency failure prior to any modelling step.
 - A statistically significant gender-based disparity in loan approval rates was identified. Applying the four-fifths rule, the computed **Disparate Impact Ratio of 0.770** falls below the 0.80 threshold, indicating potential unlawful disparate impact on female applicants under EU anti-discrimination frameworks.
-- **`zip_code` acts as a proxy for gender** (point-biserial correlation: −0.82), meaning geographic filtering reproduces gender bias even if gender is removed from the model.
+- **Intersectional bias** is more severe than either dimension alone: women aged 26–35 have an approval rate of approximately **33%**, compared to **78%** for men aged 56–65 — a 45-percentage-point gap that is invisible when examining gender or age in isolation.
+- **`zip_code` acts as a proxy for gender** (point-biserial correlation: −0.806), meaning geographic filtering reproduces gender bias even if gender is removed from the model.
 - **Multiple categories of PII** — including Social Security Numbers, full names, email addresses, IP addresses, and dates of birth — are stored in plaintext with no evidence of pseudonymisation, encryption, or access controls, in direct conflict with GDPR Articles 5 and 25.
+- **No consent tracking mechanism exists** in any of the 502 records (`consent_timestamp`, `processing_purpose`, and `data_source` are absent across the entire dataset), making it impossible for NovaCred to demonstrate a lawful basis for processing under GDPR Art. 6.
 - The dominant rejection mechanism (`algorithm_risk_score`, accounting for **81.7% of denials**) is non-transparent and non-auditable, raising high-risk AI system concerns under the EU AI Act (Annex III, §5(b)).
 
 ---
@@ -43,16 +45,20 @@ dego-project-team11-TXC/
 │   ├── 02-bias-analysis.ipynb
 │   └── 03-privacy-demo.ipynb
 ├── figures/
-│   ├── fig1_missing_values.png
-│   ├── fig2_distributions.png
-│   ├── fig3_date_formats.png
-│   ├── fig4_rejection_reasons.png
-│   ├── fig5_approval_by_gender.png
-│   └── fig6_correlation_heatmap.png
+│   ├── fig_1_histograms_for_num_cols.png
+│   ├── fig_2_categorical_feature_distributions.png
+│   ├── fig_3_numerical_features_vs_loan_approval_boxplots.png
+│   ├── fig_4_Loan_Approval_Rate_by_Gender.png
+│   ├── fig_5_Rejection_Reasons.png
+│   ├── fig_6_Approval_Rate_by_Age_Group.png
+│   ├── fig_7_Approval_Rate_by_Age_and_Gender.png
+│   ├── fig_8_ZIP_Codes_with_Lowest_Approval_Rates.png
+│   └── fig_9_correlation_heatmap.png
 ├── src/
 │   └── fairness_utils.py
 └── presentation/
-    └── video_link.md
+    └── Dego Project_Team11_TXC_Video presentation.pdf
+    └── Video Presentation YouTube Link.rtf
 ```
 
 ---
@@ -62,8 +68,7 @@ dego-project-team11-TXC/
 **Source file:** `data/raw_credit_applications.json`  
 **Format:** Nested JSON (not a flat tabular structure)  
 **N:** 502 credit applications  
-**Overall approval rate:** 58.2% (292/502)  
-**Reference date for age calculations:** 2024-01-15 (inferred from `processing_timestamp`)
+**Overall approval rate:** 58.2% (292/502)
 
 ### Schema Summary
 
@@ -77,7 +82,7 @@ dego-project-team11-TXC/
 | `applicant_info.gender` | String | Gender (inconsistently encoded — see §1.2) |
 | `applicant_info.date_of_birth` | String | Date of birth (inconsistent formats — see §1.5) |
 | `applicant_info.zip_code` | String | ZIP/postal code |
-| `financials.annual_income` | Number | Annual income (5 records use `annual_salary` instead — see §1.2) |
+| `financials.annual_income` | Number | Annual income (5 records use `annual_salary` — see §1.2) |
 | `financials.credit_history_months` | Integer | Months of credit history |
 | `financials.debt_to_income` | Number | Debt-to-income ratio |
 | `financials.savings_balance` | Number | Savings balance |
@@ -90,13 +95,15 @@ dego-project-team11-TXC/
 | `processing_timestamp` | String | Timestamp of processing (87.6% missing) |
 | `loan_purpose` | String | Stated purpose of loan (~89.6% missing) |
 
-> The dataset contains intentional data quality issues and bias patterns. All issues identified below are documented and quantified in `notebooks/01-data-quality.ipynb` and `notebooks/02-bias-analysis.ipynb`.
+> The dataset contains intentional data quality issues and bias patterns discovered during this audit.
 
 ---
 
 ## 1. Data Quality Analysis
 
 Full methodology and remediation code: `notebooks/01-data-quality.ipynb`
+
+All issues identified below are documented and quantified in `notebooks/01-data-quality.ipynb` and `notebooks/02-bias-analysis.ipynb`.
 
 ### 1.1 Completeness
 
@@ -110,8 +117,10 @@ Full methodology and remediation code: `notebooks/01-data-quality.ipynb`
 | `annual_income` | 5 | 1.0% |
 | `gender` | 3 | 0.6% |
 
-![Figure 1: Missing value heatmap by field](figures/fig1_missing_values.png)  
-*Figure 1: `processing_timestamp` and `loan_purpose` are too sparse for analytical use. The near-total absence of `processing_timestamp` (87.6% missing) means NovaCred cannot demonstrate GDPR storage limitation compliance (Art. 5(1)(e)) or produce audit trails required under the EU AI Act (Art. 12).*
+`loan_purpose` (~89.6% missing) and `processing_timestamp` (87.6% missing) are effectively absent and cannot be used analytically. Notably, `loan_purpose` is the most sparsely populated field in the dataset. The near-total absence of `processing_timestamp` means NovaCred cannot demonstrate GDPR storage limitation compliance (Art. 5(1)(e)) or produce the audit trails required under the EU AI Act (Art. 12).
+
+![Figure 1: Histograms for numerical columns](figures/fig_1_histograms_for_num_cols.png)  
+*Figure 1: Histograms for all numerical columns. Reveals distributions and outliers including zero income and negative credit history months.*
 
 ### 1.2 Consistency
 
@@ -134,8 +143,8 @@ Full methodology and remediation code: `notebooks/01-data-quality.ipynb`
 | `annual_income` = 0 | 1 | Likely a missing value recorded as zero rather than null. |
 | Invalid email format (`sarah.smith@`) | 1 | Incomplete email stored in `email` field. |
 
-![Figure 2: Distributions of annual_income, credit_history_months, debt_to_income](figures/fig2_distributions.png)  
-*Figure 2: Red dashed lines mark invalid values — zero income, negative credit history months, and DTI above 1.0. All three require flagging before downstream modelling.*
+![Figure 2: Categorical feature distributions](figures/fig_2_categorical_feature_distributions.png)  
+*Figure 2: Categorical feature distributions, including the six distinct gender encodings that break aggregation and bias analysis.*
 
 ### 1.4 Accuracy
 
@@ -159,20 +168,22 @@ The `date_of_birth` field is stored as a plain string with **no enforced format*
 **Records with non-standard format (excluding empty/missing): 157 (31.3%)**  
 **Records with non-standard or missing date format (total): 162 (32.3%)**
 
-![Figure 3: date_of_birth format inconsistency](figures/fig3_date_formats.png)  
-*Figure 3: Three distinct date formats co-exist in the same field. Any age-based calculation performed without prior normalisation will silently produce incorrect results for 31.3% of records. One record (`app_183`) uses `MM/DD/YYYY` format — potentially ambiguous and requiring manual resolution.*
+Any age-based calculation performed without prior normalisation will silently produce incorrect results for 31.3% of records.
+
+![Figure 3: Numerical features vs loan approval boxplots](figures/fig_3_numerical_features_vs_loan_approval_boxplots.png)  
+*Figure 3: Boxplots of numerical features split by loan approval outcome. Invalid values (negative credit history, zero income, DTI > 1.0) are visible as outliers.*
 
 ### 1.6 Data Quality Audit Summary
 
 | Dimension | Verdict | Key Findings |
 |-----------|---------|--------------|
-| **Uniqueness** | FAIL | 2 duplicate `_id` values; 3 SSNs shared across records |
+| **Completeness** | FAIL | 5 missing SSNs, 5 missing income; `loan_purpose` ~89.6% absent; `processing_timestamp` 87.6% missing |
 | **Consistency** | FAIL | 6 gender representations; 3 date formats; `annual_salary` vs `annual_income`; 8 strings in numeric fields |
-| **Completeness** | FAIL | 5 missing SSNs, 5 missing income; 0/502 records have consent, retention, or processing purpose fields |
 | **Validity** | FAIL | 1 zero income, 2 negative credit history, 1 impossible DTI, 1 negative savings, 1 malformed email |
+| **Accuracy** | FAIL | 2 duplicate `_id` values; 3 SSNs shared across records; field name and type mismatches |
 | **Timeliness** | FAIL | 87.6% of records have no `processing_timestamp` |
 
-**Overall: The dataset fails on all five data quality dimensions.**
+**Overall: The dataset fails on all five data quality dimensions. No credit decisions should be made on this data without remediation.**
 
 ### 1.7 Remediation Steps Demonstrated
 
@@ -188,7 +199,8 @@ The `date_of_birth` field is stored as a plain string with **no enforced format*
 
 ## 2. Bias Detection & Fairness Analysis
 
-Full methodology and statistical analysis: `notebooks/02-bias-analysis.ipynb`
+Full methodology and statistical analysis: `notebooks/02-bias-analysis.ipynb`  
+Reusable fairness metric functions: `src/fairness_utils.py`
 
 This analysis evaluates whether NovaCred's historical loan approval decisions show evidence of demographic bias. We investigate disparities across **gender**, **age groups**, and **intersectional combinations of both attributes**, and examine whether some features may act as **proxy variables** for protected characteristics.
 
@@ -224,9 +236,12 @@ Demographic Parity Difference (DPD):
 DPD = P(approved | Female) − P(approved | Male) = −0.151
 ```
 
+![Figure 4: Loan Approval Rate by Gender](figures/fig_4_Loan_Approval_Rate_by_Gender.png)  
+*Figure 4: Approval rate by gender after normalising inconsistent encodings. The 15.1 pp gap and DI ratio of 0.770 indicate potential disparate impact.*
+
 ### 2.3 Age-Based Bias
 
-Approval rates also vary across age groups.
+Approval rates also vary significantly across age groups.
 
 | Age Group | Approval Rate |
 |-----------|---------------|
@@ -236,16 +251,26 @@ Approval rates also vary across age groups.
 | 46–55 | 66.7% |
 | 56–65 | 65.8% |
 
-Applicants aged **26–35** have the lowest approval rate by a significant margin, suggesting potential age-related structural disparities.
+Applicants aged **26–35** have the lowest approval rate by a significant margin, suggesting potential age-related structural disparities. This group also naturally has shorter credit histories, which may compound the effect via proxy discrimination (see §2.6).
+
+![Figure 6: Approval Rate by Age Group](figures/fig_6_Approval_Rate_by_Age_Group.png)  
+*Figure 6: Approval rate by age group. The 26–35 cohort is approved at only 40.4%, a significant outlier compared to all other groups.*
 
 ### 2.4 Intersectional Bias (Age × Gender)
 
-Combining demographic attributes reveals stronger disparities:
+Combining demographic attributes reveals disparities far stronger than either dimension shows in isolation:
 
-- Women aged **26–35**: approval rate ≈ **33%**
-- Men aged **56–65**: approval rate ≈ **78%**
+| Segment | Approval Rate |
+|---------|--------------|
+| Women aged 26–35 | ≈ 33% |
+| Men aged 26–35 | ≈ 47% |
+| Women aged 56–65 | ≈ 55% |
+| Men aged 56–65 | ≈ 78% |
 
-This indicates **intersectional bias**, where multiple attributes interact to amplify disparities beyond what either dimension shows in isolation.
+The gap between the most- and least-favoured intersectional segment is **approximately 45 percentage points**. Any fairness analysis that examines only gender or only age will miss this amplification effect.
+
+![Figure 7: Approval Rate by Age and Gender](figures/fig_7_Approval_Rate_by_Age_and_Gender.png)  
+*Figure 7: Intersectional approval rates by age group and gender. Women aged 26–35 are approved at ≈33%, versus ≈78% for men aged 56–65 — a 45 pp gap invisible in single-dimension analysis.*
 
 ### 2.5 Rejection Reason Distribution
 
@@ -256,14 +281,14 @@ This indicates **intersectional bias**, where multiple attributes interact to am
 | `high_dti_ratio` | 13 | 6.3% |
 | `low_income` | 4 | 1.9% |
 
-![Figure 4: Rejection reason distribution](figures/fig4_rejection_reasons.png)  
-![Figure 5: Approval rate by gender](figures/fig5_approval_by_gender.png)
-
 Most rejections (81.7%) are attributed to `algorithm_risk_score`, which functions as an opaque decision label with no interpretable breakdown for the affected applicant.
+
+![Figure 5: Rejection Reasons](figures/fig_5_Rejection_Reasons.png)  
+*Figure 5: 81.7% of rejections are attributed to `algorithm_risk_score` — an opaque label that provides no actionable explanation to the applicant.*
 
 ### 2.6 Proxy Discrimination Risk
 
-Some variables may act as **indirect proxies for protected attributes**, reproducing bias even when those attributes are excluded from the model.
+Some variables may act as **indirect proxies for protected attributes**, reproducing bias even when those attributes are explicitly excluded from the model.
 
 | Attribute | Potential Proxy For | Observation |
 |-----------|---------------------|-------------|
@@ -272,9 +297,13 @@ Some variables may act as **indirect proxies for protected attributes**, reprodu
 | `annual_income` | Gender | Income disparities may indirectly reproduce gender gaps |
 | `spending_behavior` categories | Sensitive traits | 15 categories including Healthcare, Gambling, Adult Entertainment |
 
-![Figure 6: Correlation heatmap](figures/fig6_correlation_heatmap.png)
+These variables allow demographic disparities to persist **even if gender or age are explicitly removed from the model**. The `zip_code`–gender correlation of −0.806 is particularly strong and constitutes a direct proxy discrimination risk.
 
-These variables allow demographic disparities to persist **even if gender or age are explicitly removed from the model**.
+![Figure 8: ZIP Codes with Lowest Approval Rates](figures/fig_8_ZIP_Codes_with_Lowest_Approval_Rates.png)  
+*Figure 8: ZIP codes with the lowest loan approval rates. The geographic clustering of rejections mirrors gender distribution patterns, confirming `zip_code` as a proxy variable.*
+
+![Figure 9: Correlation heatmap](figures/fig_9_correlation_heatmap.png)  
+*Figure 9: Correlation heatmap highlighting `zip_code`'s strong relationship with gender (−0.806), confirming its role as a proxy variable.*
 
 ---
 
@@ -284,8 +313,8 @@ Full implementation: `notebooks/03-privacy-demo.ipynb`
 
 ### 3.1 PII Inventory
 
-| Field | PII Type | GDPR Classification | Plaintext? |
-|-------|----------|---------------------|------------|
+| Field | PII Type | GDPR Classification | Stored in Plaintext? |
+|-------|----------|---------------------|----------------------|
 | `full_name` | Direct identifier | Art. 4(1) | Yes |
 | `email` | Direct identifier | Art. 4(1) | Yes |
 | `ssn` | Direct identifier | High sensitivity | Yes |
@@ -294,12 +323,15 @@ Full implementation: `notebooks/03-privacy-demo.ipynb`
 | `zip_code` | Quasi-identifier | Personal when combined | Yes |
 | `gender` | Quasi-identifier | Art. 4(1) / potential Art. 9 | Yes |
 
+All seven PII and quasi-identifier fields are stored in plaintext with no pseudonymisation, encryption, or access controls applied.
+
 ### 3.2 GDPR Compliance Assessment
 
 | Requirement | Article | Status | Finding |
 |------------|---------|--------|---------|
-| Lawful basis | Art. 6 | Undocumented | No documented legal basis in dataset or metadata |
-| Data minimisation | Art. 5(1)(c) | Violated | `ip_address` unnecessary; granular spending categories expose sensitive lifestyle data |
+| Lawful basis | Art. 6 | Undocumented | No documented legal basis in dataset or metadata; `consent_timestamp`, `processing_purpose`, and `data_source` absent from all 502 records |
+| Consent tracking | Art. 6 / Art. 7 | Violated | No consent mechanism exists; no record of when or how consent was obtained |
+| Data minimisation | Art. 5(1)(c) | Violated | `ip_address` has no documented purpose; granular spending categories expose sensitive lifestyle data |
 | Storage limitation | Art. 5(1)(e) | Violated | No retention timestamps; `processing_timestamp` 87.6% missing |
 | Accuracy | Art. 5(1)(d) | Violated | Inconsistent gender/date formats, invalid values, duplicates |
 | Integrity & confidentiality | Art. 5(1)(f) | Violated | All direct identifiers stored in plaintext |
@@ -320,43 +352,48 @@ NovaCred's credit scoring system qualifies as a **high-risk AI system** under An
 ## 4. Governance Recommendations
 
 ### 1. Pseudonymise All Direct Identifiers at Rest
-**Finding:** `ssn`, `full_name`, `email`, and `ip_address` stored in plaintext.  
+**Finding:** `ssn`, `full_name`, `email`, and `ip_address` stored in plaintext; a single breach would cause irreversible harm to all 502 applicants.  
 **Action:** Apply salted SHA-256 hashing to `ssn` immediately (demonstrated in notebook 03). Extend to `full_name` and `email` in all analytical copies. Restrict original identifiers to a production environment with role-based access controls.  
 **Addresses:** GDPR Art. 5(1)(f); Art. 25
 
-### 2. Remove or Justify `ip_address` and Sensitive `spending_behavior` Categories
+### 2. Implement a Consent Tracking Mechanism
+**Finding:** No `consent_timestamp`, `processing_purpose`, or `data_source` field exists in any of the 502 records. NovaCred cannot demonstrate a lawful basis for processing under Art. 6, and has no evidence of when or how consent was obtained.  
+**Action:** Add `consent_timestamp`, `consent_basis` (referencing the applicable Art. 6 ground), and `data_source` fields to the schema. Implement a consent collection flow at application intake and store a cryptographic record of consent alongside each application. Ensure the consent record is linked to the applicant in a way that supports Art. 17 erasure requests.  
+**Addresses:** GDPR Art. 6; Art. 7; Art. 13
+
+### 3. Remove or Justify `ip_address` and Sensitive `spending_behavior` Categories
 **Finding:** `ip_address` serves no documented purpose in credit decisioning. Spending categories including `Adult Entertainment`, `Gambling`, `Alcohol`, and `Healthcare` may constitute special category data under Art. 9.  
 **Action:** Remove `ip_address`. Replace per-category spending with `total_monthly_spending`.  
-**Addresses:** GDPR Art. 5(1)(b); Art. 5(1)(c)
+**Addresses:** GDPR Art. 5(1)(b); Art. 5(1)(c); Art. 9
 
-### 3. Enforce Input Validation at Ingestion
+### 4. Enforce Input Validation at Ingestion
 **Finding:** Six gender representations, three date formats, field name mismatches (`annual_salary`), type mismatches (income as string), and invalid numeric values — all passed ingestion unchecked.  
 **Action:** Schema validator enforcing ISO 8601 dates, a controlled gender vocabulary (`Male`, `Female`, `Other`, `Prefer not to say`), standardised field names, non-negative numeric fields, and valid email format. Log all rejected submissions for review.  
 **Addresses:** GDPR Art. 5(1)(d); EU AI Act Art. 10
 
-### 4. Implement Bias Monitoring with Defined Thresholds
-**Finding:** DI = 0.770 overall; DI ≈ 0.67 for women aged 26–35. `zip_code` correlation −0.82 with gender.  
-**Action:** Compute DI by gender, age group, and intersection on every model retrain. Trigger mandatory human review when DI < 0.80. Flag `zip_code`, `credit_history_months`, and `annual_income` as proxy variables requiring ongoing monitoring.  
+### 5. Implement Bias Monitoring with Defined Thresholds
+**Finding:** The Disparate Impact ratio for gender is 0.770, below the 0.80 threshold. Intersectional bias (age × gender) is more severe still — women aged 26–35 approved at ≈33% vs. men aged 56–65 at ≈78%.  
+**Action:** Establish a bias monitoring framework that computes DI ratios by gender, age group, and their intersection on a regular schedule (monthly or per model retrain). Set a minimum DI threshold of 0.80; any metric below this triggers a mandatory human review. Document monitoring results as part of EU AI Act risk management obligations.  
 **Addresses:** GDPR Art. 5(1)(a); EU AI Act Art. 9; Art. 10
 
-### 5. Replace `algorithm_risk_score` with Structured Rejection Reasons
-**Finding:** 81.7% of rejections provide no actionable or interpretable explanation.  
-**Action:** Add a `rejection_factors` field listing the top 3 contributing variables and their direction. Make this available to applicants upon request.  
+### 6. Replace `algorithm_risk_score` with Explainable Rejection Reasons
+**Finding:** 170 out of 210 rejected applicants (81.7%) receive `algorithm_risk_score` as their sole rejection explanation with no breakdown of contributing factors.  
+**Action:** Replace the generic label with a structured `rejection_factors` field listing the top contributing factors and their direction (e.g., `debt_to_income above threshold`, `credit_history_months below minimum`).  
 **Addresses:** GDPR Art. 22; EU AI Act Art. 13
 
-### 6. Introduce Human-in-the-Loop Review
-**Finding:** No human review fields exist; all credit rejections are fully automated.  
-**Action:** Add `reviewed_by`, `review_timestamp`, and `override_decision` fields. Mandate human review before communicating any rejection decision.  
+### 7. Introduce Human Review for Automated Rejections
+**Finding:** Zero records contain any indication of human involvement. No `reviewed_by`, `override_decision`, or `human_approval` field exists — all 502 decisions appear fully automated.  
+**Action:** Implement mandatory human-in-the-loop review for all loan rejections. Add `reviewed_by`, `review_timestamp`, and `override_decision` fields to the schema. Sample approvals randomly for review to detect false positives and model drift.  
 **Addresses:** GDPR Art. 22; EU AI Act Art. 14
 
-### 7. Implement a Data Retention Policy
-**Finding:** No retention fields exist; data appears stored indefinitely.  
-**Action:** Add `retention_until` at ingestion. Implement a monthly automated archival/deletion job. Document in a Records of Processing Activities (ROPA) register.  
-**Addresses:** GDPR Art. 5(1)(e); Art. 30
+### 8. Implement a Data Retention Policy with Timestamps
+**Finding:** No `created_at`, `retention_until`, or `expires_at` field exists. `processing_timestamp` is missing for 87.6% of records, making storage limitation compliance impossible to demonstrate.  
+**Action:** Add mandatory `created_at` and `retention_until` fields at ingestion. Define a maximum retention period (e.g., 5 years post-decision). Implement automated deletion at retention expiry and log all deletions for audit purposes.  
+**Addresses:** GDPR Art. 5(1)(e); Art. 17; EU AI Act Art. 12
 
-### 8. Conduct a Data Protection Impact Assessment (DPIA)
-**Finding:** High-risk automated system processing sensitive PII at scale; no DPIA evidence present.  
-**Action:** Conduct a DPIA under GDPR Art. 35 before further deployment or retraining. Include bias risk, data quality failures, and lack of human oversight in scope.  
+### 9. Conduct a Data Protection Impact Assessment (DPIA)
+**Finding:** NovaCred processes sensitive PII at scale for fully automated high-stakes decisions, meeting the threshold for mandatory DPIA under Art. 35. No evidence of a DPIA exists.  
+**Action:** Commission a DPIA covering bias risk, data quality failures, and absence of human oversight. Include bias risk, data quality failures, and lack of human oversight in scope.  
 **Addresses:** GDPR Art. 35; EU AI Act Art. 9; Art. 43
 
 ---
@@ -371,11 +408,35 @@ Run notebooks in order:
 
 1. `notebooks/01-data-quality.ipynb` → outputs `data/cleaned_credit_applications.csv` + all figures to `figures/`
 2. `notebooks/02-bias-analysis.ipynb` → reads `data/cleaned_credit_applications.csv`
-3. `notebooks/03-privacy-demo.ipynb` → reads raw JSON `data/raw_credit_applications.json` (by design)
+3. `notebooks/03-privacy-demo.ipynb` → reads raw JSON `data/raw_credit_applications.json` (by design — demonstrates audit on unmodified source data)
+
+`src/fairness_utils.py` contains reusable fairness metric functions (DI ratio, DPD, intersectional breakdown) used by `notebooks/02-bias-analysis.ipynb`.
 
 ---
 
-## 6. Git Collaboration
+## 6. Individual Contributions
+
+| Member | Primary Work |
+|--------|-------------|
+| Inês Monteiro | Data loading, JSON flattening, date normalisation, field name harmonisation, cleaning pipeline, `notebooks/01-data-quality.ipynb` |
+| Anh Nguyen | DI ratio, DPD, age-group intersectional analysis, proxy analysis, `notebooks/02-bias-analysis.ipynb`, `src/fairness_utils.py` |
+| Estêvão Fernandes | PII inventory, salted pseudonymisation, GDPR mapping, EU AI Act classification, `notebooks/03-privacy-demo.ipynb` |
+| Jonas Knosp | README, governance recommendations, presentation narrative, PR reviews |
+
+All members contributed via their own GitHub accounts on dedicated feature branches merged into `dev` and then `main`.
+
+---
+
+## 7. Use of AI
+This project was primarily developed by the team through independent analysis, original code, and our own critical judgment throughout. AI assistants (Claude by Anthropic) were used selectively as a productivity aid in the following ways:
+
+- Code drafting: Boilerplate and repetitive code snippets were occasionally drafted with AI assistance and then reviewed, tested, and adapted by team members.
+- Writing polish: Some prose in this README and the governance recommendations section was refined for clarity using an AI assistant.
+- Debugging support: AI tools were consulted when diagnosing tricky data issues (e.g., nested JSON flattening, regex for format detection).
+
+All analytical decisions, findings, interpretations, and recommendations are our own. Every AI-generated output was critically evaluated before inclusion. The core notebooks, fairness metrics, GDPR/EU AI Act mappings, and conclusions reflect the team's independent work.
+
+---
 
 ### Branch Structure
 
@@ -391,15 +452,6 @@ main
 ### Commit Prefixes
 
 `[data]` · `[bias]` · `[privacy]` · `[docs]` · `[fix]`
-
-### Contributions
-
-| Member | Primary Work |
-|--------|-------------|
-| Inês Monteiro | Data loading, JSON flattening, date normalisation, field name harmonisation, cleaning pipeline, `01-data-quality.ipynb` |
-| Anh Nguyen | DI ratio, DPD, age-group intersectional analysis, proxy analysis, `02-bias-analysis.ipynb`, `src/fairness_utils.py` |
-| Estêvão Fernandes | PII inventory, salted pseudonymisation, GDPR mapping, EU AI Act classification, `03-privacy-demo.ipynb` |
-| Jonas Knosp | README, governance recommendations, presentation narrative, PR reviews |
 
 **Video:** [https://youtu.be/6ABEicd4LCM](https://youtu.be/6ABEicd4LCM)
 
