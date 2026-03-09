@@ -96,7 +96,6 @@ dego-project-team11-TXC/
 | `processing_timestamp` | String | Timestamp of processing (87.6% missing) |
 | `loan_purpose` | String | Stated purpose of loan (~89.6% missing) |
 
-> The dataset contains intentional data quality issues and bias patterns discovered during this audit.
 
 ---
 
