@@ -267,7 +267,7 @@ Some variables may act as **indirect proxies for protected attributes**, reprodu
 
 | Attribute | Potential Proxy For | Observation |
 |-----------|---------------------|-------------|
-| `zip_code` | Gender | Point-biserial correlation: −0.82 with gender |
+| `zip_code` | Gender | Point-biserial correlation: −0.806 with gender |
 | `credit_history_months` | Age | Younger applicants naturally have shorter credit histories |
 | `annual_income` | Gender | Income disparities may indirectly reproduce gender gaps |
 | `spending_behavior` categories | Sensitive traits | 15 categories including Healthcare, Gambling, Adult Entertainment |
@@ -401,7 +401,7 @@ main
 | Estêvão Fernandes | PII inventory, salted pseudonymisation, GDPR mapping, EU AI Act classification, `03-privacy-demo.ipynb` |
 | Jonas Knosp | README, governance recommendations, presentation narrative, PR reviews |
 
-**Video:** [https://youtu.be/NG7pcE6AMfY](https://youtu.be/NG7pcE6AMfY)
+**Video:** [https://youtu.be/6ABEicd4LCM](https://youtu.be/6ABEicd4LCM)
 
 ---
 
