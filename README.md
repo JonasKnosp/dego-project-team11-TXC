@@ -401,7 +401,7 @@ main
 | Estêvão Fernandes | PII inventory, salted pseudonymisation, GDPR mapping, EU AI Act classification, `03-privacy-demo.ipynb` |
 | Jonas Knosp | README, governance recommendations, presentation narrative, PR reviews |
 
-**Video:** [https://youtu.be/NG7pcE6AMfY](https://youtu.be/NG7pcE6AMfY)
+**Video:** [https://youtu.be/6ABEicd4LCM](https://youtu.be/6ABEicd4LCM)
 
 ---
 
