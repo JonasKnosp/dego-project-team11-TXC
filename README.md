@@ -267,7 +267,7 @@ Some variables may act as **indirect proxies for protected attributes**, reprodu
 
 | Attribute | Potential Proxy For | Observation |
 |-----------|---------------------|-------------|
-| `zip_code` | Gender | Point-biserial correlation: −0.82 with gender |
+| `zip_code` | Gender | Point-biserial correlation: −0.806 with gender |
 | `credit_history_months` | Age | Younger applicants naturally have shorter credit histories |
 | `annual_income` | Gender | Income disparities may indirectly reproduce gender gaps |
 | `spending_behavior` categories | Sensitive traits | 15 categories including Healthcare, Gambling, Adult Entertainment |
